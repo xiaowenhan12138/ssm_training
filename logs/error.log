@@ -1,0 +1,2 @@
+[2018-08-30 00:40:17.176] [ERROR] test.TestSlf4jAndLog4j.main(TestSlf4jAndLog4j.java:11) test.TestSlf4jAndLog4j - TestSlf4jAndLog4j error log：error
+[2018-08-30 08:15:55.153] [ERROR] test.TestSlf4jAndLog4j.main(TestSlf4jAndLog4j.java:11) test.TestSlf4jAndLog4j - TestSlf4jAndLog4j error log：error

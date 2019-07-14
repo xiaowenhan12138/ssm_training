@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">  
+  
+<mapper namespace="cn.tedu.store.mapper.GoodsPictureMapper">
+
+	<!-- 添加商品的图片信息 -->
+	<!-- 	void insertGoodsPictures(List<GoodsPicture> picList); -->
+	<insert id="insertGoodsPictures" parameterType="java.util.List">
+		
+		insert into t_goods_pictures(
+			goods_id, url, turn, filename
+		)values
+			<foreach collection="list" item="pic" index="index" separator=",">
+				(#{pic.goodsId}, #{pic.url}, #{pic.turn}, #{pic.filename})
+			</foreach>
+	</insert>
+	
+	<!--List<GoodsPicture> getGoodsPictures(Integer goodsId); -->
+	<select id="getGoodsPictures" resultType="cn.tedu.store.bean.GoodsPicture">
+		select
+			id,
+			goods_id as goodsId,
+			url,
+			turn,
+			filename,
+			size,
+			width,
+			height,
+			summary
+		from
+			t_goods_pictures
+		where
+			goods_id = #{goodsId}
+		and
+			turn>0
+		order by turn
+	</select>
+	
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

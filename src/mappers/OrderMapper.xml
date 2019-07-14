@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">  
+  
+<mapper namespace="cn.tedu.store.mapper.OrderMapper">
+	<!-- 在订单表中插入一条数据 -->
+	<!-- void insetOrder(Order order); -->
+	<insert id="insetOrder" parameterType="cn.tedu.store.bean.Order"
+				keyProperty="id" useGeneratedKeys="true">
+			insert into t_order(
+				userid,address_id,payment,tradetime
+			)values(
+				#{userid},#{addressid},#{payment},now()
+			)
+	</insert>
+	
+	<!-- 在订单详情表中插入数据 -->
+	<!-- 
+	void insertOrderItem(OrderItem orderItem)
+	 -->
+	 <insert id="insertOrderItem" parameterType=
+	 			"cn.tedu.store.bean.OrderItem">
+	 	insert into t_orderitem(
+	 		userid,goodsid,image,title,price,count,spec,
+	 		orderid
+	 	)values(
+	 		#{userid},#{goodsid},#{image},#{title},
+	 		#{price},#{count},#{spec},#{orderid}
+	 	)
+	 </insert>
+	 
+	 <!-- 修改付款的状态 -->
+	 <!-- 
+		void updatePaymentStatus(
+			@Param("orderid")Integer orderid, 
+			@Param("paymentStatus")int paymentStatus);
+	 -->
+	 <update id="updatePaymentStatus">
+		 update t_order
+		 set
+		 	payment_status=#{paymentStatus}
+		 	<if test="paymentStatus==3">
+		 		,receiptime=now()
+		 	</if>
+		 where
+		 	id = #{orderid}
+	 </update>
+	 
+	 <!-- 修改订单发货状态
+	 void updateShippingStatus(
+			@Param("orderid")Integer orderid, 
+			@Param("shippingStatus")Integer shippingStatus);
+	  -->
+	 <update id="updateShippingStatus">
+		 update t_order
+		 set
+		 	shipping_status=#{shippingStatus}
+		 	<if test="shippingStatus==2">
+		 		,delivertime=now()
+		 	</if>
+		 	<if test="shippingStatus==3">
+		 		,handovertime=now()
+		 	</if>
+		 where
+		 	id = #{orderid}
+	 </update>
+	 
+	 
+	 
+	 <!-- 查询该用户的所有订单 -->
+	 <!-- 
+	 List<OrderItemVo> getOrderItems(
+			Integer userid);
+	  -->
+	  <select id="getOrderItems" resultType="cn.tedu.store.bean.OrderItemVo">
+	  	select 
+			t_order.id as orderid,
+			t_orderitem.id as orderitemId,
+			tradetime,
+			image,
+			title,
+			price,
+			count,
+			spec,
+			payment_status as paymentStatus,
+			shipping_status as shippingStatus
+		from 
+			t_order,t_orderitem
+		where 
+			t_order.id = t_orderitem.orderid
+		and 
+			t_order.userid=#{userid}
+		order by
+			tradetime desc, t_orderitem.id asc
+	  </select>
+
+
+	<!-- 查询所有订单信息，注意开启MyBatis的延迟加载功能 -->
+	<!-- List<OrderInfoVo> getAllOrders();  -->
+	<select id="getAllOrders" resultType="cn.tedu.store.bean.OrderInfoVo">
+		select
+			o.id as orderid,
+			payment,
+			payment_status as paymentStatus,
+			shipping_status as shippingStatus,
+			tradetime,
+			receiptime,
+			delivertime,
+			handovertime
+		from t_order o
+		order by id desc
+	</select>
+
+	<!-- 
+	List<OrderInfoVo> getOrdersByPage(
+			@Param("shippingStatus")Integer shippingStatus,
+			@Param("start")Integer start, 
+			@Param("length")Integer length);
+	-->
+	<select id="getOrdersByPage" resultType="cn.tedu.store.bean.OrderInfoVo">
+		select
+			o.id as orderid,
+			payment,
+			payment_status as paymentStatus,
+			shipping_status as shippingStatus,
+			tradetime,
+			receiptime,
+			delivertime,
+			handovertime
+		from t_order o
+		<if test="shippingStatus!=null">
+			where shipping_status=#{shippingStatus}
+		</if>
+		order by id desc
+		limit #{start}, #{length}
+	</select>
+	
+	<!-- 查询某个订单的详情
+		OrderInfoVo getOrderInfoVo(Integer orderid); -->
+	<select id="getOrderById" resultMap="orderInfoVoResult">
+		select
+			o.id as orderid,
+			payment,
+			payment_status as paymentStatus,
+			shipping_status as shippingStatus,
+			tradetime,
+			receiptime,
+			delivertime,
+			handovertime,
+			recv_name as recvName,
+			recv_zip as recvZip,
+			recv_phone as recvPhone,
+			recv_tel as recvTel,
+			recv_district as recvDistrict,
+			recv_addr as recvAddr
+		from t_order o
+		left outer join t_address a
+		on o.address_id = a.id
+		where 
+			o.id = #{orderid}
+	</select>
+		  
+	<resultMap type="cn.tedu.store.bean.OrderInfoVo" id="orderInfoVoResult">
+		<!-- 此处要明确给出id的映射，用于指定主键映射关系； -->
+		<id property="orderid" column="orderid"/>
+		<!-- 其他属性自动匹配映射；集合元素，使用以下collection进行特殊映射 -->
+		<!-- column="orderid"是指要传入的参数，这是是指<select id="getOrderInfoVo">中sql语句中的orderid -->
+		<collection property="listItems" column="orderid"
+					ofType="cn.tedu.store.bean.OrderItemVo"
+					select="getOrderItemsByOrderid"/>
+	</resultMap>
+	
+	<!-- 根据orderid，查询出其中的orderitemvo -->
+	 <select id="getOrderItemsByOrderid" resultType="cn.tedu.store.bean.OrderItemVo">
+	  	select 
+			t_order.id as orderid,
+			t_orderitem.id as orderitemId,
+			tradetime,
+			image,
+			title,
+			price,
+			count,
+			spec,
+			payment_status as paymentStatus,
+			shipping_status as shippingStatus
+		from 
+			t_order,t_orderitem
+		where 
+			t_order.id = t_orderitem.orderid
+		and 
+			t_order.id=#{orderid}
+		order by
+			tradetime desc, t_orderitem.id asc
+	  </select>
+	  
+	  <!-- Integer getAllOrdersCount(); -->
+	  <select id="getAllOrdersCount" resultType="java.lang.Integer">
+	  	select count(id) from t_order
+	  </select>
+</mapper>
+
+
+
