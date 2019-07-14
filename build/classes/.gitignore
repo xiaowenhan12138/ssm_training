@@ -1,0 +1,12 @@
+/.DS_Store
+/cn/
+/db.properties
+/easy-log4j2.xml
+/log4j2.xml
+/mappers/
+/mybatis-config.xml
+/spring-aop.xml
+/spring-dao.xml
+/spring-mvc.xml
+/spring-service.xml
+/test/
